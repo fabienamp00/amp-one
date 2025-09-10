@@ -1,8 +1,18 @@
-﻿<!doctype html>
+param([string]$Root="C:\amp-one")
+$ErrorActionPreference = "Stop"
+
+function Ensure-Dir($p){ if(-not (Test-Path $p)){ New-Item -ItemType Directory -Force -Path $p | Out-Null } }
+
+$consoleDir = Join-Path $Root "apps\console"
+Ensure-Dir $consoleDir
+
+# ---------- index.html (V2 + sous-onglet "Site") ----------
+$index = @'
+<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <title>AMP One Console â€” V2 (Site tab)</title>
+    <title>AMP One Console — V2 (Site tab)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root { --bg:#0b0b0f; --panel:#141420; --line:#26263a; --text:#eaeaf2; --muted:#aab; --accent:#3b82f6; }
@@ -156,7 +166,7 @@
         const header = document.createElement("div");
         header.className = "card";
         header.innerHTML = '<h3>'+site.name+'</h3><div class="muted">'+
-          [site.address, (site.zipcode||"")+" "+(site.city||""), site.holder?("Titulaire: "+site.holder):""].filter(Boolean).join(" â€¢ ")
+          [site.address, (site.zipcode||"")+" "+(site.city||""), site.holder?("Titulaire: "+site.holder):""].filter(Boolean).join(" • ")
           +'</div>';
         c.appendChild(header);
 
@@ -221,13 +231,13 @@
         const wrap = document.createElement("div");
         wrap.className = "card";
         wrap.innerHTML = '<h3>APS (mapping)</h3>'+
-          '<div><small class="muted">RÃ¨gles JSON</small></div>'+
+          '<div><small class="muted">Règles JSON</small></div>'+
           '<textarea id="rules" rows="8" style="width:100%">{\n  "replace_rules":[\n    { "column":"category", "replace":{"OTC":"OTC","RX":"Prescription"} }\n  ],\n  "concat_rules":[\n    { "target":"label", "cols":["brand","name"], "sep":" " }\n  ]\n}</textarea>'+
           '<div class="row" style="margin-top:8px"><button class="btn" id="btnMap">Transformer</button></div>'+
           '<pre id="mapOut" class="muted" style="white-space:pre-wrap;margin-top:8px"></pre>';
         wrap.querySelector("#btnMap").onclick = async () => {
           const ds = state.perSite[site.id]?.datasetId;
-          if(!ds){ alert("Importe dâ€™abord un CSV"); return; }
+          if(!ds){ alert("Importe d’abord un CSV"); return; }
           let rules;
           try { rules = JSON.parse(wrap.querySelector("#rules").value); }
           catch(e){ alert("JSON invalide"); return; }
@@ -242,16 +252,16 @@
       function cardExport(site){
         const wrap = document.createElement("div");
         wrap.className = "card";
-        wrap.innerHTML = '<h3>Exporter (dry-run â†’ MinIO)</h3>'+
+        wrap.innerHTML = '<h3>Exporter (dry-run → MinIO)</h3>'+
           '<div class="row"><button class="btn" id="btnExport">Exporter</button></div>'+
           '<div id="exp" class="muted" style="margin-top:8px"></div>';
         wrap.querySelector("#btnExport").onclick = async () => {
           const wid = state.perSite[site.id]?.workId;
-          if(!wid){ alert("Fais dâ€™abord APS"); return; }
+          if(!wid){ alert("Fais d’abord APS"); return; }
           const r = await fetch(API+"/export/dryrun", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ work_id: wid }) });
           const j = await r.json();
           wrap.querySelector("#exp").innerHTML = 'Objet S3: <code>'+j.bucket+'/'+j.key+'</code><br/>'+
-            (j.presigned_url ? ('<a href="'+j.presigned_url+'" target="_blank" rel="noreferrer">TÃ©lÃ©charger (lien Ã©phÃ©mÃ¨re)</a>') : '');
+            (j.presigned_url ? ('<a href="'+j.presigned_url+'" target="_blank" rel="noreferrer">Télécharger (lien éphémère)</a>') : '');
         };
         return wrap;
       }
@@ -259,19 +269,19 @@
       function cardMonitor(site){
         const wrap = document.createElement("div");
         wrap.className = "card";
-        wrap.innerHTML = '<h3>Monitor</h3><div class="muted">Ã€ intÃ©grer: Ã©tats agents, jobs, journaux...</div>';
+        wrap.innerHTML = '<h3>Monitor</h3><div class="muted">À intégrer: états agents, jobs, journaux...</div>';
         return wrap;
       }
       function cardAdmin(site){
         const wrap = document.createElement("div");
         wrap.className = "card";
-        wrap.innerHTML = '<h3>Admin</h3><div class="muted">Ã€ intÃ©grer: gestion accÃ¨s, pages cachÃ©es, etc.</div>';
+        wrap.innerHTML = '<h3>Admin</h3><div class="muted">À intégrer: gestion accès, pages cachées, etc.</div>';
         return wrap;
       }
       function cardPlaza(site){
         const wrap = document.createElement("div");
         wrap.className = "card";
-        wrap.innerHTML = '<h3>Pricer Plaza</h3><div class="muted">IntÃ©gration iFrame (future) â€” nÃ©cessite auth tiers.</div>';
+        wrap.innerHTML = '<h3>Pricer Plaza</h3><div class="muted">Intégration iFrame (future) — nécessite auth tiers.</div>';
         return wrap;
       }
 
@@ -305,7 +315,7 @@
         save(); renderSitesTable(); render();
       };
       document.getElementById("btnEdit").onclick = () => {
-        const s = currentSite(); if(!s){ alert("SÃ©lectionne un site"); return; }
+        const s = currentSite(); if(!s){ alert("Sélectionne un site"); return; }
         s.name = document.getElementById("f_name").value.trim();
         s.holder = document.getElementById("f_holder").value.trim();
         s.address = document.getElementById("f_address").value.trim();
@@ -314,7 +324,7 @@
         save(); renderSitesTable(); render();
       };
       document.getElementById("btnDelete").onclick = () => {
-        const s = currentSite(); if(!s){ alert("SÃ©lectionne un site"); return; }
+        const s = currentSite(); if(!s){ alert("Sélectionne un site"); return; }
         if(!confirm("Supprimer "+s.name+" ?")) return;
         state.sites = state.sites.filter(x => x.id !== s.id);
         if(state.sites.length){ state.currentSiteId = state.sites[0].id; } else { state.currentSiteId = null; }
@@ -323,7 +333,7 @@
 
       // Bouton "Enregistrer" (dans la carte modal)
       document.getElementById("btnSave").onclick = () => {
-        const s = currentSite(); if(!s){ alert("SÃ©lectionne un site"); return; }
+        const s = currentSite(); if(!s){ alert("Sélectionne un site"); return; }
         s.name = document.getElementById("f_name").value.trim();
         s.holder = document.getElementById("f_holder").value.trim();
         s.address = document.getElementById("f_address").value.trim();
@@ -336,3 +346,21 @@
     </script>
   </body>
 </html>
+'@
+
+Set-Content -Path (Join-Path $consoleDir "index.html") -Value $index -Encoding UTF8
+
+# ---------- Dockerfile simple pour la console ----------
+$df = @'
+FROM nginx:1.27-alpine
+COPY index.html /usr/share/nginx/html/index.html
+'@
+Set-Content -Path (Join-Path $consoleDir "Dockerfile") -Value $df -Encoding ASCII
+
+# ---------- Build + run uniquement la console ----------
+Push-Location (Join-Path $Root "infra")
+docker compose build console
+docker compose up -d console
+Pop-Location
+
+Write-Host "OK. Console V2 avec sous-onglet 'Site' dispo: http://localhost:5173" -ForegroundColor Green
