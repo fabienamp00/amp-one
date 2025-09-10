@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang='fr'>
+  <head>
+    <meta charset='utf-8'>
+    <title>AMP One Console (Starter)</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <style>
+      html,body{margin:0;padding:0;background:#0b0b0f;color:#eaeaf2;font-family:system-ui,Segoe UI,Roboto,Arial}
+      .wrap{display:flex;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+      .card{background:#141420;border:1px solid #26263a;padding:24px 28px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:720px}
+      a{color:#9ad} code{background:#1e1e2a;padding:2px 6px;border-radius:6px}
+      .btn{background:#2a2a44;border:1px solid #3a3a66;border-radius:10px;padding:10px 14px;color:#eaeaf2;text-decoration:none}
+      .btn:hover{background:#33335a}
+      ul{line-height:1.6}
+    </style>
+  </head>
+  <body>
+    <div class='wrap'>
+      <div class='card'>
+        <h1>✅ AMP One Console (Starter)</h1>
+        <p>Le stack local est prêt.</p>
+        <ul>
+          <li>API serveur: <a href='http://localhost:8080/health' target='_blank'>http://localhost:8080/health</a></li>
+          <li>Keycloak (SSO): <a href='http://localhost:8081' target='_blank'>http://localhost:8081</a> (admin / admin)</li>
+          <li>MinIO: <a href='http://localhost:9001' target='_blank'>http://localhost:9001</a> (amp / ampampamp)</li>
+        </ul>
+        <p>Realm Keycloak importé: <code>amp</code>. Client SPA: <code>console-spa</code>.</p>
+      </div>
+      <a class='btn' href='http://localhost:8080/health' target='_blank'>Tester l'API /health</a>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,81 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: amp
+      POSTGRES_PASSWORD: amp
+      POSTGRES_DB: amp
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U amp -d amp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2.10
+    command: ["-js"]
+    healthcheck:
+      test: ["CMD", "nats-server", "-v"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: amp
+      MINIO_ROOT_PASSWORD: ampampamp
+    ports: ["9000:9000", "9001:9001"]
+    volumes:
+      - minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build: ../apps/server
+    env_file: ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+      nats:
+        condition: service_started
+      keycloak:
+        condition: service_started   # << keycloak n'a pas de healthcheck, donc 'service_started'
+      minio:
+        condition: service_healthy
+    ports: ["8080:8080"]
+
+  console:
+    build: ../apps/console
+    env_file: ../.env
+    depends_on:
+      - server
+    ports: ["5173:80"]
+
+  backup:
+    build: ../infra/backup
+    env_file: ../.env
+    depends_on:
+      - db
+      - minio
+
+volumes:
+  dbdata:
+  minio:
